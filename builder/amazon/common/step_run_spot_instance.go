@@ -279,6 +279,7 @@ func (s *StepRunSpotInstance) Run(ctx context.Context, state multistep.StateBag)
 
 	// Create the request for the spot instance.
 	req, createOutput := ec2conn.CreateFleetRequest(createFleetInput)
+	req.RetryCount = 11
 	ui.Message(fmt.Sprintf("Sending spot request (%s)...", req.RequestID))
 	// Actually send the spot connection request.
 	err = req.Send()
@@ -315,24 +316,18 @@ func (s *StepRunSpotInstance) Run(ctx context.Context, state multistep.StateBag)
 
 	ui.Message(fmt.Sprintf("Instance ID: %s", instanceId))
 
-	// Get information about the created instance
-	var describeOutput *ec2.DescribeInstancesOutput
-	err = retry.Config{
-		Tries:      11,
-		RetryDelay: (&retry.Backoff{InitialBackoff: 200 * time.Millisecond, MaxBackoff: 30 * time.Second, Multiplier: 2}).Linear,
-	}.Run(ctx, func(ctx context.Context) error {
-		describeOutput, err = ec2conn.DescribeInstances(&ec2.DescribeInstancesInput{
-			InstanceIds: []*string{aws.String(instanceId)},
-		})
-		return err
+	describeReq, describeOutput := ec2conn.DescribeInstancesRequest(&ec2.DescribeInstancesInput{
+		InstanceIds: []*string{aws.String(instanceId)},
 	})
+	describeReq.RetryCount = 11
+
+	err = describeReq.Send()
 	if err != nil || len(describeOutput.Reservations) == 0 || len(describeOutput.Reservations[0].Instances) == 0 {
-		err := fmt.Errorf("Error finding source instance.")
+		err := fmt.Errorf("Error finding source instance: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
-
 	instance := describeOutput.Reservations[0].Instances[0]
 
 	// Tag the spot instance request (not the eventual spot instance)

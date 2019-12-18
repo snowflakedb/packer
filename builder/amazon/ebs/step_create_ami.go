@@ -83,8 +83,10 @@ func (s *stepCreateAMI) Run(ctx context.Context, state multistep.StateBag) multi
 		return multistep.ActionHalt
 	}
 
-	imagesResp, err := ec2conn.DescribeImages(&ec2.DescribeImagesInput{ImageIds: []*string{createResp.ImageId}})
-	if err != nil {
+	imagesReg, imagesResp := ec2conn.DescribeImagesRequest(&ec2.DescribeImagesInput{ImageIds: []*string{createResp.ImageId}})
+	imagesReg.RetryCount = 11
+
+	if err := imagesReg.Send(); err != nil {
 		err := fmt.Errorf("Error searching for AMI: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())

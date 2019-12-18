@@ -194,20 +194,9 @@ func (s *StepRunSourceInstance) Run(ctx context.Context, state multistep.StateBa
 		runOpts.InstanceInitiatedShutdownBehavior = &s.InstanceInitiatedShutdownBehavior
 	}
 
-	var runResp *ec2.Reservation
-	err = retry.Config{
-		Tries: 11,
-		ShouldRetry: func(err error) bool {
-			if isAWSErr(err, "InvalidParameterValue", "iamInstanceProfile") {
-				return true
-			}
-			return false
-		},
-		RetryDelay: (&retry.Backoff{InitialBackoff: 200 * time.Millisecond, MaxBackoff: 30 * time.Second, Multiplier: 2}).Linear,
-	}.Run(ctx, func(ctx context.Context) error {
-		runResp, err = ec2conn.RunInstances(runOpts)
-		return err
-	})
+	runReq, runResp := ec2conn.RunInstancesRequest(runOpts)
+	runReq.RetryCount = 11
+	err = runReq.Send()
 
 	if isAWSErr(err, "VPCIdNotSpecified", "No default VPC for this user") && subnetId == "" {
 		err := fmt.Errorf("Error launching source instance: a valid Subnet Id was not specified")
@@ -243,27 +232,19 @@ func (s *StepRunSourceInstance) Run(ctx context.Context, state multistep.StateBa
 	// there's a race condition that can happen because of AWS's eventual
 	// consistency where even though the wait is complete, the describe call
 	// will fail. Retry a couple of times to try to mitigate that race.
-
-	var r *ec2.DescribeInstancesOutput
-	err = retry.Config{Tries: 11, ShouldRetry: func(err error) bool {
-		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
-			return true
-		}
-		return false
-	},
-		RetryDelay: (&retry.Backoff{InitialBackoff: 200 * time.Millisecond, MaxBackoff: 30 * time.Second, Multiplier: 2}).Linear,
-	}.Run(ctx, func(ctx context.Context) error {
-		r, err = ec2conn.DescribeInstances(describeInstance)
-		return err
+	describeReq, describeOutput := ec2conn.DescribeInstancesRequest(&ec2.DescribeInstancesInput{
+		InstanceIds: []*string{aws.String(instanceId)},
 	})
-	if err != nil || len(r.Reservations) == 0 || len(r.Reservations[0].Instances) == 0 {
-		err := fmt.Errorf("Error finding source instance.")
+	describeReq.RetryCount = 11
+
+	err = describeReq.Send()
+	if err != nil || len(describeOutput.Reservations) == 0 || len(describeOutput.Reservations[0].Instances) == 0 {
+		err := fmt.Errorf("Error finding source instance: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
-
-	instance := r.Reservations[0].Instances[0]
+	instance := describeOutput.Reservations[0].Instances[0]
 
 	if s.Debug {
 		if instance.PublicDnsName != nil && *instance.PublicDnsName != "" {
