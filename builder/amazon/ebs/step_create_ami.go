@@ -48,8 +48,9 @@ func (s *stepCreateAMI) Run(ctx context.Context, state multistep.StateBag) multi
 		BlockDeviceMappings: config.AMIMappings.BuildEC2BlockDeviceMappings(),
 	}
 
-	createResp, err := ec2conn.CreateImage(createOpts)
-	if err != nil {
+	createReq, createResp := ec2conn.CreateImageRequest(createOpts)
+	createReq.RetryCount = 11
+	if err := createReq.Send(); err != nil {
 		err := fmt.Errorf("Error creating AMI: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
