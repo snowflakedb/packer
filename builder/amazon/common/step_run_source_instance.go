@@ -195,7 +195,7 @@ func (s *StepRunSourceInstance) Run(ctx context.Context, state multistep.StateBa
 	}
 
 	runReq, runResp := ec2conn.RunInstancesRequest(runOpts)
-	runReq.RetryCount = 11
+	runReq.RetryCount = 21
 	err = runReq.Send()
 
 	if isAWSErr(err, "VPCIdNotSpecified", "No default VPC for this user") && subnetId == "" {
