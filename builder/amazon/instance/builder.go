@@ -345,6 +345,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 	if !b.config.AMISkipRegister {
 		steps = append(steps,
+			&common.StepCleanupTempKeys{
+				Comm: &b.config.RunConfig.Comm,
+			},
 			&StepUploadX509Cert{},
 			&StepBundleVolume{
 				Debug: b.config.PackerDebug,
@@ -353,23 +356,39 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 				Debug: b.config.PackerDebug,
 			},
 			&awscommon.StepDeregisterAMI{
-				ForceDeregister: b.config.AMIForceDeregister,
-				AMIName:         b.config.AMIName,
+				AccessConfig:        &b.config.AccessConfig,
+				ForceDeregister:     b.config.AMIForceDeregister,
+				ForceDeleteSnapshot: b.config.AMIForceDeleteSnapshot,
+				AMIName:             b.config.AMIName,
+				Regions:             b.config.AMIRegions,
 			},
-			&StepRegisterAMI{},
+			&StepRegisterAMI{
+				EnableAMISriovNetSupport: b.config.AMISriovNetSupport,
+				EnableAMIENASupport:      b.config.AMIENASupport,
+				AMISkipBuildRegion:       b.config.AMISkipBuildRegion,
+			},
 			&awscommon.StepAMIRegionCopy{
-				AccessConfig: &b.config.AccessConfig,
-				Regions:      b.config.AMIRegions,
-				Name:         b.config.AMIName,
+				AccessConfig:      &b.config.AccessConfig,
+				Regions:           b.config.AMIRegions,
+				AMIKmsKeyId:       b.config.AMIKmsKeyId,
+				RegionKeyIds:      b.config.AMIRegionKMSKeyIDs,
+				EncryptBootVolume: b.config.AMIEncryptBootVolume,
+				Name:              b.config.AMIName,
+				OriginalRegion:    *ec2conn.Config.Region,
 			},
 			&awscommon.StepModifyAMIAttributes{
-				Description:  b.config.AMIDescription,
-				Users:        b.config.AMIUsers,
-				Groups:       b.config.AMIGroups,
-				ProductCodes: b.config.AMIProductCodes,
+				Description:    b.config.AMIDescription,
+				Users:          b.config.AMIUsers,
+				Groups:         b.config.AMIGroups,
+				ProductCodes:   b.config.AMIProductCodes,
+				SnapshotUsers:  b.config.SnapshotUsers,
+				SnapshotGroups: b.config.SnapshotGroups,
+				Ctx:            b.config.ctx,
 			},
 			&awscommon.StepCreateTags{
-				Tags: b.config.AMITags,
+				Tags:         b.config.AMITags,
+				SnapshotTags: b.config.SnapshotTags,
+				Ctx:          b.config.ctx,
 			},
 		)
 	}

@@ -108,3 +108,5 @@
     to create volumes from the snapshot(s). all will make the snapshot
     publicly accessible.
     
+-   `skip_register_ami` (bool) - Skip the registration of the image
+    

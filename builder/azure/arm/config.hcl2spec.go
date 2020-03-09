@@ -62,6 +62,7 @@ type FlatConfig struct {
 	AdditionalDiskSize                  []int32                            `mapstructure:"disk_additional_size" required:"false" cty:"disk_additional_size"`
 	DiskCachingType                     *string                            `mapstructure:"disk_caching_type" required:"false" cty:"disk_caching_type"`
 	AllowedInboundIpAddresses           []string                           `mapstructure:"allowed_inbound_ip_addresses" cty:"allowed_inbound_ip_addresses"`
+	SkipImageCapture                    *bool                              `mapstructure:"skip_image_capture" cty:"skip_image_capture"`
 	UserName                            *string                            `cty:"user_name"`
 	Password                            *string                            `cty:"password"`
 	Type                                *string                            `mapstructure:"communicator" cty:"communicator"`
@@ -172,6 +173,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"disk_additional_size":                     &hcldec.AttrSpec{Name: "disk_additional_size", Type: cty.List(cty.Number), Required: false},
 		"disk_caching_type":                        &hcldec.AttrSpec{Name: "disk_caching_type", Type: cty.String, Required: false},
 		"allowed_inbound_ip_addresses":             &hcldec.AttrSpec{Name: "allowed_inbound_ip_addresses", Type: cty.List(cty.String), Required: false},
+		"skip_image_capture":                       &hcldec.AttrSpec{Name: "skip_image_capture", Type: cty.Bool, Required: false},
 		"user_name":                                &hcldec.AttrSpec{Name: "user_name", Type: cty.String, Required: false},
 		"password":                                 &hcldec.AttrSpec{Name: "password", Type: cty.String, Required: false},
 		"communicator":                             &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},

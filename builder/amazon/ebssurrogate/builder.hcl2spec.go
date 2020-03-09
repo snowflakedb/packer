@@ -161,6 +161,7 @@ type FlatConfig struct {
 	SnapshotTags                              common.TagMap                          `mapstructure:"snapshot_tags" required:"false" cty:"snapshot_tags"`
 	SnapshotUsers                             []string                               `mapstructure:"snapshot_users" required:"false" cty:"snapshot_users"`
 	SnapshotGroups                            []string                               `mapstructure:"snapshot_groups" required:"false" cty:"snapshot_groups"`
+	AMISkipRegister                           *bool                                  `mapstructure:"skip_register_ami" cty:"skip_register_ami"`
 	AMIMappings                               []common.FlatBlockDevice               `mapstructure:"ami_block_device_mappings" required:"false" cty:"ami_block_device_mappings"`
 	LaunchMappings                            []FlatBlockDevice                      `mapstructure:"launch_block_device_mappings" required:"false" cty:"launch_block_device_mappings"`
 	RootDevice                                *FlatRootBlockDevice                   `mapstructure:"ami_root_device" required:"true" cty:"ami_root_device"`
@@ -288,6 +289,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"snapshot_tags":                         &hcldec.BlockAttrsSpec{TypeName: "common.TagMap", ElementType: cty.String, Required: false},
 		"snapshot_users":                        &hcldec.AttrSpec{Name: "snapshot_users", Type: cty.List(cty.String), Required: false},
 		"snapshot_groups":                       &hcldec.AttrSpec{Name: "snapshot_groups", Type: cty.List(cty.String), Required: false},
+		"skip_register_ami":                     &hcldec.AttrSpec{Name: "skip_register_ami", Type: cty.Bool, Required: false},
 		"ami_block_device_mappings":             &hcldec.BlockListSpec{TypeName: "ami_block_device_mappings", Nested: hcldec.ObjectSpec((*common.FlatBlockDevice)(nil).HCL2Spec())},
 		"launch_block_device_mappings":          &hcldec.BlockListSpec{TypeName: "launch_block_device_mappings", Nested: hcldec.ObjectSpec((*FlatBlockDevice)(nil).HCL2Spec())},
 		"ami_root_device":                       &hcldec.BlockSpec{TypeName: "ami_root_device", Nested: hcldec.ObjectSpec((*FlatRootBlockDevice)(nil).HCL2Spec())},

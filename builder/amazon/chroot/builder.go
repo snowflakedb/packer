@@ -13,6 +13,7 @@ import (
 	"runtime"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/hcl/v2/hcldec"
 	awscommon "github.com/hashicorp/packer/builder/amazon/common"
 	"github.com/hashicorp/packer/common"
 	"github.com/hashicorp/packer/common/chroot"
@@ -169,6 +170,10 @@ type Config struct {
 	ctx interpolate.Context
 }
 
+func (c *Config) GetContext() interpolate.Context {
+	return c.ctx
+}
+
 type wrappedCommandTemplate struct {
 	Command string
 }
@@ -178,13 +183,19 @@ type Builder struct {
 	runner multistep.Runner
 }
 
-func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
+func (b *Builder) ConfigSpec() hcldec.ObjectSpec { return b.config.FlatMapstructure().HCL2Spec() }
+
+func (b *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
 	b.config.ctx.Funcs = awscommon.TemplateFuncs
 	err := config.Decode(&b.config, &config.DecodeOpts{
 		Interpolate:        true,
 		InterpolateContext: &b.config.ctx,
 		InterpolateFilter: &interpolate.RenderFilter{
 			Exclude: []string{
+				"ami_description",
+				"snapshot_tags",
+				"tags",
+				"root_volume_tags",
 				"command_wrapper",
 				"post_mount_commands",
 				"pre_mount_commands",
@@ -193,16 +204,20 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
 		},
 	}, raws...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+
+	if b.config.Architecture == "" {
+		b.config.Architecture = "x86_64"
+	}
+
+	if b.config.PackerConfig.PackerForce {
+		b.config.AMIForceDeregister = true
 	}
 
 	// Defaults
 	if b.config.ChrootMounts == nil {
 		b.config.ChrootMounts = make([][]string, 0)
-	}
-
-	if b.config.CopyFiles == nil {
-		b.config.CopyFiles = make([]string, 0)
 	}
 
 	if len(b.config.ChrootMounts) == 0 {
@@ -215,8 +230,11 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
 		}
 	}
 
-	if len(b.config.CopyFiles) == 0 && !b.config.FromScratch {
-		b.config.CopyFiles = []string{"/etc/resolv.conf"}
+	// set default copy file if we're not giving our own
+	if b.config.CopyFiles == nil {
+		if !b.config.FromScratch {
+			b.config.CopyFiles = []string{"/etc/resolv.conf"}
+		}
 	}
 
 	if b.config.CommandWrapper == "" {

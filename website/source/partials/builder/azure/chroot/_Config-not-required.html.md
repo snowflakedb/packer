@@ -48,3 +48,5 @@
 -   `image_hyperv_generation` (string) - The [Hyper-V generation type](https://docs.microsoft.com/en-us/rest/api/compute/images/createorupdate#hypervgenerationtypes).
     Defaults to `V1`.
     
+-   `skip_image_capture` (bool) - Skip the capture of the image
+    

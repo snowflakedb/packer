@@ -230,6 +230,8 @@
     Providing `allowed_inbound_ip_addresses` in combination with
     `virtual_network_name` is not allowed.
     
+-   `skip_image_capture` (bool) - Skip the capture of the image
+    
 -   `async_resourcegroup_delete` (bool) - If you want packer to delete the
     temporary resource group asynchronously set this value. It's a boolean
     value and defaults to false. Important Setting this true means that

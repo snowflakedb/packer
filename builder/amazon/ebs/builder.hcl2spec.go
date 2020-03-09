@@ -48,6 +48,7 @@ type FlatConfig struct {
 	SnapshotTags                              common.TagMap                          `mapstructure:"snapshot_tags" required:"false" cty:"snapshot_tags"`
 	SnapshotUsers                             []string                               `mapstructure:"snapshot_users" required:"false" cty:"snapshot_users"`
 	SnapshotGroups                            []string                               `mapstructure:"snapshot_groups" required:"false" cty:"snapshot_groups"`
+	AMISkipRegister                           *bool                                  `mapstructure:"skip_register_ami" cty:"skip_register_ami"`
 	AssociatePublicIpAddress                  *bool                                  `mapstructure:"associate_public_ip_address" required:"false" cty:"associate_public_ip_address"`
 	AvailabilityZone                          *string                                `mapstructure:"availability_zone" required:"false" cty:"availability_zone"`
 	BlockDurationMinutes                      *int64                                 `mapstructure:"block_duration_minutes" required:"false" cty:"block_duration_minutes"`
@@ -174,6 +175,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"snapshot_tags":                 &hcldec.BlockAttrsSpec{TypeName: "common.TagMap", ElementType: cty.String, Required: false},
 		"snapshot_users":                &hcldec.AttrSpec{Name: "snapshot_users", Type: cty.List(cty.String), Required: false},
 		"snapshot_groups":               &hcldec.AttrSpec{Name: "snapshot_groups", Type: cty.List(cty.String), Required: false},
+		"skip_register_ami":             &hcldec.AttrSpec{Name: "skip_register_ami", Type: cty.Bool, Required: false},
 		"associate_public_ip_address":   &hcldec.AttrSpec{Name: "associate_public_ip_address", Type: cty.Bool, Required: false},
 		"availability_zone":             &hcldec.AttrSpec{Name: "availability_zone", Type: cty.String, Required: false},
 		"block_duration_minutes":        &hcldec.AttrSpec{Name: "block_duration_minutes", Type: cty.Number, Required: false},

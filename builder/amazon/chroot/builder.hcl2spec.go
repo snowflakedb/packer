@@ -37,6 +37,7 @@ type FlatConfig struct {
 	SnapshotTags            common.TagMap                     `mapstructure:"snapshot_tags" required:"false" cty:"snapshot_tags"`
 	SnapshotUsers           []string                          `mapstructure:"snapshot_users" required:"false" cty:"snapshot_users"`
 	SnapshotGroups          []string                          `mapstructure:"snapshot_groups" required:"false" cty:"snapshot_groups"`
+	AMISkipRegister         *bool                             `mapstructure:"skip_register_ami" cty:"skip_register_ami"`
 	AccessKey               *string                           `mapstructure:"access_key" required:"true" cty:"access_key"`
 	CustomEndpointEc2       *string                           `mapstructure:"custom_endpoint_ec2" required:"false" cty:"custom_endpoint_ec2"`
 	DecodeAuthZMessages     *bool                             `mapstructure:"decode_authorization_messages" required:"false" cty:"decode_authorization_messages"`
@@ -108,6 +109,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"snapshot_tags":                 &hcldec.BlockAttrsSpec{TypeName: "common.TagMap", ElementType: cty.String, Required: false},
 		"snapshot_users":                &hcldec.AttrSpec{Name: "snapshot_users", Type: cty.List(cty.String), Required: false},
 		"snapshot_groups":               &hcldec.AttrSpec{Name: "snapshot_groups", Type: cty.List(cty.String), Required: false},
+		"skip_register_ami":             &hcldec.AttrSpec{Name: "skip_register_ami", Type: cty.Bool, Required: false},
 		"access_key":                    &hcldec.AttrSpec{Name: "access_key", Type: cty.String, Required: false},
 		"custom_endpoint_ec2":           &hcldec.AttrSpec{Name: "custom_endpoint_ec2", Type: cty.String, Required: false},
 		"decode_authorization_messages": &hcldec.AttrSpec{Name: "decode_authorization_messages", Type: cty.Bool, Required: false},

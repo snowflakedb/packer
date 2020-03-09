@@ -41,6 +41,7 @@ type FlatConfig struct {
 	OSDiskSkipCleanup        *bool             `mapstructure:"os_disk_skip_cleanup" cty:"os_disk_skip_cleanup"`
 	ImageResourceID          *string           `mapstructure:"image_resource_id" required:"true" cty:"image_resource_id"`
 	ImageHyperVGeneration    *string           `mapstructure:"image_hyperv_generation" cty:"image_hyperv_generation"`
+	SkipImageCapture         *bool             `mapstructure:"skip_image_capture" cty:"skip_image_capture"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -87,6 +88,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"os_disk_skip_cleanup":         &hcldec.AttrSpec{Name: "os_disk_skip_cleanup", Type: cty.Bool, Required: false},
 		"image_resource_id":            &hcldec.AttrSpec{Name: "image_resource_id", Type: cty.String, Required: false},
 		"image_hyperv_generation":      &hcldec.AttrSpec{Name: "image_hyperv_generation", Type: cty.String, Required: false},
+		"skip_image_capture":           &hcldec.AttrSpec{Name: "skip_image_capture", Type: cty.Bool, Required: false},
 	}
 	return s
 }
