@@ -356,6 +356,8 @@ type Config struct {
 	// Providing `allowed_inbound_ip_addresses` in combination with
 	// `virtual_network_name` is not allowed.
 	AllowedInboundIpAddresses []string `mapstructure:"allowed_inbound_ip_addresses"`
+	// Skip the capture of the image
+	SkipImageCapture bool `mapstructure:"skip_image_capture"`
 
 	// Runtime Values
 	UserName               string

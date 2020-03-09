@@ -260,51 +260,59 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			SSHConfig: b.config.RunConfig.Comm.SSHConfigFunc(),
 		},
 		&common.StepProvision{},
-		&common.StepCleanupTempKeys{
-			Comm: &b.config.RunConfig.Comm,
-		},
-		&awscommon.StepStopEBSBackedInstance{
-			Skip:                b.config.IsSpotInstance(),
-			DisableStopInstance: b.config.DisableStopInstance,
-		},
-		&awscommon.StepModifyEBSBackedInstance{
-			EnableAMISriovNetSupport: b.config.AMISriovNetSupport,
-			EnableAMIENASupport:      b.config.AMIENASupport,
-		},
-		&awscommon.StepDeregisterAMI{
-			AccessConfig:        &b.config.AccessConfig,
-			ForceDeregister:     b.config.AMIForceDeregister,
-			ForceDeleteSnapshot: b.config.AMIForceDeleteSnapshot,
-			AMIName:             b.config.AMIName,
-			Regions:             b.config.AMIRegions,
-		},
-		&stepCreateAMI{
-			AMISkipBuildRegion: b.config.AMISkipBuildRegion,
-		},
-		&awscommon.StepAMIRegionCopy{
-			AccessConfig:       &b.config.AccessConfig,
-			Regions:            b.config.AMIRegions,
-			AMIKmsKeyId:        b.config.AMIKmsKeyId,
-			RegionKeyIds:       b.config.AMIRegionKMSKeyIDs,
-			EncryptBootVolume:  b.config.AMIEncryptBootVolume,
-			Name:               b.config.AMIName,
-			OriginalRegion:     *ec2conn.Config.Region,
-			AMISkipBuildRegion: b.config.AMISkipBuildRegion,
-		},
-		&awscommon.StepModifyAMIAttributes{
-			Description:    b.config.AMIDescription,
-			Users:          b.config.AMIUsers,
-			Groups:         b.config.AMIGroups,
-			ProductCodes:   b.config.AMIProductCodes,
-			SnapshotUsers:  b.config.SnapshotUsers,
-			SnapshotGroups: b.config.SnapshotGroups,
-			Ctx:            b.config.ctx,
-		},
-		&awscommon.StepCreateTags{
-			Tags:         b.config.AMITags,
-			SnapshotTags: b.config.SnapshotTags,
-			Ctx:          b.config.ctx,
-		},
+	}
+
+	if !b.config.AMISkipRegister {
+		steps = append(steps,
+			&awscommon.StepStopEBSBackedInstance{
+				Comm: &b.config.RunConfig.Comm,
+			},
+			&common.StepCleanupTempKeys{
+				Comm: &b.config.RunConfig.Comm,
+			},
+			&awscommon.StepStopEBSBackedInstance{
+				Skip:                b.config.IsSpotInstance(),
+				DisableStopInstance: b.config.DisableStopInstance,
+			},
+			&awscommon.StepModifyEBSBackedInstance{
+				EnableAMISriovNetSupport: b.config.AMISriovNetSupport,
+				EnableAMIENASupport:      b.config.AMIENASupport,
+			},
+			&awscommon.StepDeregisterAMI{
+				AccessConfig:        &b.config.AccessConfig,
+				ForceDeregister:     b.config.AMIForceDeregister,
+				ForceDeleteSnapshot: b.config.AMIForceDeleteSnapshot,
+				AMIName:             b.config.AMIName,
+				Regions:             b.config.AMIRegions,
+			},
+			&stepCreateAMI{
+				AMISkipBuildRegion: b.config.AMISkipBuildRegion,
+			},
+			&awscommon.StepAMIRegionCopy{
+				AccessConfig:       &b.config.AccessConfig,
+				Regions:            b.config.AMIRegions,
+				AMIKmsKeyId:        b.config.AMIKmsKeyId,
+				RegionKeyIds:       b.config.AMIRegionKMSKeyIDs,
+				EncryptBootVolume:  b.config.AMIEncryptBootVolume,
+				Name:               b.config.AMIName,
+				OriginalRegion:     *ec2conn.Config.Region,
+				AMISkipBuildRegion: b.config.AMISkipBuildRegion,
+			},
+			&awscommon.StepModifyAMIAttributes{
+				Description:    b.config.AMIDescription,
+				Users:          b.config.AMIUsers,
+				Groups:         b.config.AMIGroups,
+				ProductCodes:   b.config.AMIProductCodes,
+				SnapshotUsers:  b.config.SnapshotUsers,
+				SnapshotGroups: b.config.SnapshotGroups,
+				Ctx:            b.config.ctx,
+			},
+			&awscommon.StepCreateTags{
+				Tags:         b.config.AMITags,
+				SnapshotTags: b.config.SnapshotTags,
+				Ctx:          b.config.ctx,
+			},
+		)
 	}
 
 	// Run!

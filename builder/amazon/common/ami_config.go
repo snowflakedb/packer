@@ -126,6 +126,8 @@ type AMIConfig struct {
 	// to create volumes from the snapshot(s). all will make the snapshot
 	// publicly accessible.
 	SnapshotGroups []string `mapstructure:"snapshot_groups" required:"false"`
+	// Skip the registration of the image
+	AMISkipRegister bool `mapstructure:"skip_register_ami"`
 }
 
 func stringInSlice(s []string, searchstr string) bool {
@@ -139,8 +141,7 @@ func stringInSlice(s []string, searchstr string) bool {
 
 func (c *AMIConfig) Prepare(accessConfig *AccessConfig, ctx *interpolate.Context) []error {
 	var errs []error
-
-	if c.AMIName == "" {
+	if c.AMIName == "" && !c.AMISkipRegister {
 		errs = append(errs, fmt.Errorf("ami_name must be specified"))
 	}
 

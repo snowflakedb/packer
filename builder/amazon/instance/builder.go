@@ -342,51 +342,36 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			SSHConfig: b.config.RunConfig.Comm.SSHConfigFunc(),
 		},
 		&common.StepProvision{},
-		&common.StepCleanupTempKeys{
-			Comm: &b.config.RunConfig.Comm,
-		},
-		&StepUploadX509Cert{},
-		&StepBundleVolume{
-			Debug: b.config.PackerDebug,
-		},
-		&StepUploadBundle{
-			Debug: b.config.PackerDebug,
-		},
-		&awscommon.StepDeregisterAMI{
-			AccessConfig:        &b.config.AccessConfig,
-			ForceDeregister:     b.config.AMIForceDeregister,
-			ForceDeleteSnapshot: b.config.AMIForceDeleteSnapshot,
-			AMIName:             b.config.AMIName,
-			Regions:             b.config.AMIRegions,
-		},
-		&StepRegisterAMI{
-			EnableAMISriovNetSupport: b.config.AMISriovNetSupport,
-			EnableAMIENASupport:      b.config.AMIENASupport,
-			AMISkipBuildRegion:       b.config.AMISkipBuildRegion,
-		},
-		&awscommon.StepAMIRegionCopy{
-			AccessConfig:      &b.config.AccessConfig,
-			Regions:           b.config.AMIRegions,
-			AMIKmsKeyId:       b.config.AMIKmsKeyId,
-			RegionKeyIds:      b.config.AMIRegionKMSKeyIDs,
-			EncryptBootVolume: b.config.AMIEncryptBootVolume,
-			Name:              b.config.AMIName,
-			OriginalRegion:    *ec2conn.Config.Region,
-		},
-		&awscommon.StepModifyAMIAttributes{
-			Description:    b.config.AMIDescription,
-			Users:          b.config.AMIUsers,
-			Groups:         b.config.AMIGroups,
-			ProductCodes:   b.config.AMIProductCodes,
-			SnapshotUsers:  b.config.SnapshotUsers,
-			SnapshotGroups: b.config.SnapshotGroups,
-			Ctx:            b.config.ctx,
-		},
-		&awscommon.StepCreateTags{
-			Tags:         b.config.AMITags,
-			SnapshotTags: b.config.SnapshotTags,
-			Ctx:          b.config.ctx,
-		},
+	}
+	if !b.config.AMISkipRegister {
+		steps = append(steps,
+			&StepUploadX509Cert{},
+			&StepBundleVolume{
+				Debug: b.config.PackerDebug,
+			},
+			&StepUploadBundle{
+				Debug: b.config.PackerDebug,
+			},
+			&awscommon.StepDeregisterAMI{
+				ForceDeregister: b.config.AMIForceDeregister,
+				AMIName:         b.config.AMIName,
+			},
+			&StepRegisterAMI{},
+			&awscommon.StepAMIRegionCopy{
+				AccessConfig: &b.config.AccessConfig,
+				Regions:      b.config.AMIRegions,
+				Name:         b.config.AMIName,
+			},
+			&awscommon.StepModifyAMIAttributes{
+				Description:  b.config.AMIDescription,
+				Users:        b.config.AMIUsers,
+				Groups:       b.config.AMIGroups,
+				ProductCodes: b.config.AMIProductCodes,
+			},
+			&awscommon.StepCreateTags{
+				Tags: b.config.AMITags,
+			},
+		)
 	}
 
 	// Run!

@@ -97,6 +97,9 @@ type Config struct {
 	// Defaults to `V1`.
 	ImageHyperVGeneration string `mapstructure:"image_hyperv_generation"`
 
+	// Skip the capture of the image
+	SkipImageCapture bool `mapstructure:"skip_image_capture"`
+
 	ctx interpolate.Context
 }
 
@@ -426,14 +429,19 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		},
 		&chroot.StepChrootProvision{},
 		&chroot.StepEarlyCleanup{},
-		&StepCreateImage{
-			ImageResourceID:          b.config.ImageResourceID,
-			ImageOSState:             string(compute.Generalized),
-			OSDiskCacheType:          b.config.OSDiskCacheType,
-			OSDiskStorageAccountType: b.config.OSDiskStorageAccountType,
-			Location:                 info.Location,
-		},
 	)
+
+	if !b.config.SkipImageCapture {
+		steps = append(steps,
+			&StepCreateImage{
+				ImageResourceID:          b.config.ImageResourceID,
+				ImageOSState:             string(compute.Generalized),
+				OSDiskCacheType:          b.config.OSDiskCacheType,
+				OSDiskStorageAccountType: b.config.OSDiskStorageAccountType,
+				Location:                 info.Location,
+			},
+		)
+	}
 
 	// Run!
 	b.runner = common.NewRunner(steps, b.config.PackerConfig, ui)

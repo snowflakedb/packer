@@ -213,14 +213,20 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			NewStepGetOSDisk(azureClient, ui),
 			NewStepGetAdditionalDisks(azureClient, ui),
 			NewStepPowerOffCompute(azureClient, ui),
-			NewStepSnapshotOSDisk(azureClient, ui, &b.config),
-			NewStepSnapshotDataDisks(azureClient, ui, &b.config),
-			NewStepCaptureImage(azureClient, ui),
-			NewStepPublishToSharedImageGallery(azureClient, ui, &b.config),
+		}
+		if !b.config.SkipImageCapture {
+			steps = append(steps,
+				NewStepSnapshotOSDisk(azureClient, ui, &b.config),
+				NewStepSnapshotDataDisks(azureClient, ui, &b.config),
+				NewStepCaptureImage(azureClient, ui),
+				NewStepPublishToSharedImageGallery(azureClient, ui, &b.config),
+			)
+		}
+		steps = append(steps,
 			NewStepDeleteResourceGroup(azureClient, ui),
 			NewStepDeleteOSDisk(azureClient, ui),
 			NewStepDeleteAdditionalDisks(azureClient, ui),
-		}
+		)
 	} else if b.config.OSType == constants.Target_Windows {
 		keyVaultDeploymentName := b.stateBag.Get(constants.ArmKeyVaultDeploymentName).(string)
 		steps = []multistep.Step{
@@ -248,14 +254,20 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			NewStepGetOSDisk(azureClient, ui),
 			NewStepGetAdditionalDisks(azureClient, ui),
 			NewStepPowerOffCompute(azureClient, ui),
-			NewStepSnapshotOSDisk(azureClient, ui, &b.config),
-			NewStepSnapshotDataDisks(azureClient, ui, &b.config),
-			NewStepCaptureImage(azureClient, ui),
-			NewStepPublishToSharedImageGallery(azureClient, ui, &b.config),
+		}
+		if !b.config.SkipImageCapture {
+			steps = append(steps,
+				NewStepSnapshotOSDisk(azureClient, ui, &b.config),
+				NewStepSnapshotDataDisks(azureClient, ui, &b.config),
+				NewStepCaptureImage(azureClient, ui),
+				NewStepPublishToSharedImageGallery(azureClient, ui, &b.config),
+			)
+		}
+		steps = append(steps,
 			NewStepDeleteResourceGroup(azureClient, ui),
 			NewStepDeleteOSDisk(azureClient, ui),
 			NewStepDeleteAdditionalDisks(azureClient, ui),
-		}
+		)
 	} else {
 		return nil, fmt.Errorf("Builder does not support the os_type '%s'", b.config.OSType)
 	}
